@@ -1,0 +1,53 @@
+// Register bank: {{ module_name }}
+// Auto-generated from a YAML hardware model - do not edit by hand.
+
+module {{ module_name }} (
+    input  wire {{ clock }},
+    input  wire {{ reset }},
+    input  wire [31:0] addr,
+    input  wire [31:0] wdata,
+    input  wire        wen,
+    input  wire        ren,
+    output reg  [31:0] rdata,
+    output reg         ready
+);
+
+    // Register storage
+    {% for reg in registers %}
+    reg [{{ reg.width - 1 }}:0] {{ reg.name }};
+    {% endfor %}
+
+    always @(posedge {{ clock }} or {% if reset_active == 'low' %}negedge{% else %}posedge{% endif %} {{ reset }}) begin
+        if ({% if reset_active == 'low' %}!{% endif %}{{ reset }}) begin
+            // Load reset values
+            {% for reg in registers %}
+            {{ reg.name }} <= {{ reg.width }}'h{{ "%X" % reg.reset_value }};
+            {% endfor %}
+            rdata <= 32'h0;
+            ready <= 1'b0;
+        end else begin
+            ready <= wen | ren;
+
+            // Write path: decode address and update the matching register
+            if (wen) begin
+                case (addr)
+                    {% for reg in registers %}
+                    32'h{{ "%08X" % reg.address }}: {{ reg.name }} <= wdata;
+                    {% endfor %}
+                    default: ;
+                endcase
+            end
+
+            // Read path: decode address and drive rdata
+            if (ren) begin
+                case (addr)
+                    {% for reg in registers %}
+                    32'h{{ "%08X" % reg.address }}: rdata <= {{ reg.name }};
+                    {% endfor %}
+                    default: rdata <= 32'h0;
+                endcase
+            end
+        end
+    end
+
+endmodule

@@ -1,0 +1,48 @@
+# Hardware specification for a simple 3-register control block.
+# Each register defines its address, width, reset value, and bit fields.
+
+module_name: simple_regbank
+clock: clk
+reset: rst_n
+reset_active: low
+
+registers:
+  - name: control_reg
+    address: 0x00
+    width: 32
+    reset_value: 0x00000000
+    fields:
+      - name: enable
+        bits: [0]
+        access: RW
+        description: "Enable bit"
+
+      - name: mode
+        bits: [2, 1]
+        access: RW
+        description: "Operating mode"
+
+      - name: status
+        bits: [7, 4]
+        access: RO
+        description: "Status bits"
+
+  - name: data_reg
+    address: 0x04
+    width: 32
+    reset_value: 0xDEADBEEF
+    fields:
+      - name: data
+        bits: [31, 0]
+        access: RW
+        description: "Data register"
+
+  - name: id_reg
+    address: 0x08
+    width: 32
+    reset_value: 0x12345678
+    fields:
+      - name: chip_id
+        bits: [31, 0]
+        access: RO
+        description: "Read-only chip ID"
